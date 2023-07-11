@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Resultados</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <link href="styles.css" rel="stylesheet">
+    <script src="consulta.js"></script>
+    <script src="filtros.js"></script>
+    <script>
+        var totalAcertos = 0;
+        var totalErros = 0;
+    </script>
+</head>
+
+<body onload="atualizarGrafico()">
+    <div class="content">
+        <div class="popup">
+            <div class="header">Resultados</div>
+            <div class="contentpopup">
+                <div class="flag" id="flag">
+
+                    <div class="linhasa">
+                        <label for="dt_i">Data Inicial</label>
+                        <label for="dt_f">Data Limite</label>
+                    </div>
+                    <div class="linhasa">
+                        <input class="botaodata" type="date" name="dt_i" id="dt_i" onchange="atualizarGrafico()">
+                        <input class="botaodata" type="date" name="dt_f" id="dt_f" onchange="atualizarGrafico()">
+                    </div>
+
+                    <div class="grafico">
+                        <canvas id="graficobi"></canvas>
+                    </div>
+                    <div class="filtros">
+                        <div class="caixas">
+                            <table>
+                                <tr class="tra">
+                                    <td>Geral</td>
+                                    <th>Correta</th>
+                                    <th>Incorreta</th>
+                                </tr>
+                                <tr class="trb">
+                                    <th>
+                                        <div class="celula">
+                                            <p>Quest&atilde;o 1</p>
+                                            <input name="questaoumg" type="checkbox" id="questaoumg" onchange="atualizarGrafico()">
+                                        </div>
+                                    </th>
+                                    <td>
+                                        <input name="questaoum" type="radio" id="questaoumc" onchange="atualizarGrafico()">
+                                    </td>
+                                    <td>
+                                        <input name="questaoum" type="radio" id="questaoumi" onchange="atualizarGrafico()">
+                                    </td>
+                                </tr>
+                                <tr class="tra">
+                                    <th>
+                                        <div class="celula">
+                                            <p>Quest&atilde;o 2</p>
+                                            <input name="questaodoisg" type="checkbox" id="questaodoisg" onchange="atualizarGrafico()">
+                                        </div>
+                                    </th>
+                                    <td>
+                                        <input name="questaodois" type="radio" id="questaodoisc" onchange="atualizarGrafico()">
+                                    </td>
+                                    <td>
+                                        <input name="questaodois" type="radio" id="questaodoisi" onchange="atualizarGrafico()">
+                                    </td>
+                                </tr>
+                                <tr class="trb">
+                                    <th>
+                                        <div class="celula">
+                                            <p>Quest&atilde;o 3</p>
+                                            <input name="questaotresg" type="checkbox" id="questaotresg" onchange="atualizarGrafico()">
+                                        </div>
+                                    </th>
+                                    <td>
+                                        <input name="questaotres" type="radio" id="questaotresc" onchange="atualizarGrafico()">
+                                    </td>
+                                    <td>
+                                        <input name="questaotres" type="radio" id="questaotresi" onchange="atualizarGrafico()">
+                                    </td>
+                                </tr>
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="loader" id="loader">
+                    <p class="avisop">Carregando...</p>
+                </div>
+                <div>
+                    <input id="lpf" class="botoespopup" type="button" value="Limpar Filtros" onclick="limpar()">
+                </div>
+                <div>
+                    <input id="rld" class="botoespopup" type="button" value="Atualizar Dados" onclick="location.reload()">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var data = {
+            labels: ['Corretas', 'Incorretas'],
+            datasets: [{
+                data: [],
+                backgroundColor: ['#3A98B9', '#FF6969'],
+                hoverBackgroundColor: ['#A6D0DD', '#FFADAD'],
+                borderColor: 'black',
+                borderWidth: 1.5
+            }]
+        };
+
+        var options = {
+            responsive: true,
+            legend: {
+                display: false
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                datalabels: {
+                    formatter: function (value, context) {
+                        var dataset = context.chart.data.datasets[context.datasetIndex];
+                        var total = dataset.data.reduce(function (previousValue, currentValue) {
+                            return previousValue + currentValue;
+                        });
+                        var percentage = ((value / total) * 100).toFixed(1) + '%';
+
+                        if (value === 0) {
+                            return '';
+                        } else {
+                            return '' + percentage;
+                        }
+                    },
+                    color: '#000',
+                    font: {
+                        size: '8px'
+                    }
+                },
+            }
+        };
+
+        var ctx = document.getElementById('graficobi').getContext('2d');
+        var myPieChart = new Chart(ctx, {
+            type: 'pie',
+            data: data,
+            options: options,
+            plugins: [ChartDataLabels]
+        });
+
+        function atualizarGrafico() {
+
+            minhaFuncao();
+
+                data.datasets[0].data = [totalAcertos, totalErros];
+
+                myPieChart.update();
+                setTimeout(function () {
+                    document.getElementById('loader').style.display = "none";
+                    document.getElementById('flag').style.visibility = "visible";
+                    document.getElementById('flag').style.display = "flex";
+                    document.getElementById('lpf').style.visibility = "visible";
+                    document.getElementById('rld').style.visibility = "visible";
+                }, 3000)
+        }
+    </script>
+</body>
+
+</html>
